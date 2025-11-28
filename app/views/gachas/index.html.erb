@@ -1,0 +1,397 @@
+<div class="container mt-5 mb-5">
+  <h1 class="mt-5 mb-5 text-center fw-bold" style="color: #082627; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">
+    ガチャシミュレーター
+  </h1>
+
+  <div class="row">
+    <div class="col-md-7">
+      <div class="card shadow-lg border-0" style="border-radius: 15px;">
+        <div class="card-header text-white rounded-top" style="border-radius: 15px 15px 0 0; background-color: #28A6A5;">
+          <h5 class="mb-0"><i class="bi bi-gem"></i> ガチャを実行</h5>
+        </div>
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-12">
+              <label class="form-label fw-bold">抽選タイプを選択</label>
+              <div class="btn-group w-100" role="group">
+                <input type="radio" class="btn-check" name="draw-type" id="draw-single-radio" value="single" checked>
+                <label class="btn fw-bold" for="draw-single-radio" style="border: 2px solid #00736D; color: #00736D;">
+                  <i class="bi bi-star"></i> 単発ガチャ
+                </label>
+
+                <input type="radio" class="btn-check" name="draw-type" id="draw-multi-radio" value="multi">
+                <label class="btn fw-bold" for="draw-multi-radio" style="border: 2px solid #00736D; color: #00736D;">
+                  <i class="bi bi-stars"></i> 10連ガチャ
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-12">
+              <button class="btn w-100 fw-bold py-3" id="draw-button" style="font-size: 18px; background-color: #E8854A; color: white; border: none;">
+                <i class="bi bi-play-fill"></i> ガチャを実行
+              </button>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-6">
+              <button class="btn w-100 fw-bold" id="view-probabilities" style="background-color: #28A6A5; color: white; border: none;">
+                <i class="bi bi-pie-chart"></i> 確率を見る
+              </button>
+            </div>
+            <div class="col-6">
+              <button class="btn w-100 fw-bold" id="reset-results" style="background-color: #28A6A5; color: white; border: none;">
+                <i class="bi bi-arrow-clockwise"></i> リセット
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-5">
+      <div class="card shadow-lg border-0" style="border-radius: 15px;">
+        <div class="card-header text-white rounded-top" style="border-radius: 15px 15px 0 0; background-color: #28A6A5;">
+          <h5 class="mb-0"><i class="bi bi-bar-chart"></i> 統計情報</h5>
+        </div>
+        <div class="card-body">
+          <div class="row mb-2 p-3 rounded" style="background-color: #E8F4F3;">
+            <div class="col-6">
+              <strong style="color: #082627;">総抽選回数</strong>
+            </div>
+            <div class="col-6 text-end">
+              <span id="total-draws" class="badge" style="background-color: #28A6A5; font-size: 16px;">0</span>
+            </div>
+          </div>
+
+          <hr>
+
+          <h6 class="fw-bold mb-3" style="color: #082627;">レアリティ別統計</h6>
+          <div id="rarity-stats">
+            <p class="text-muted text-center">まだ抽選されていません</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-5" id="results-section" style="display: none;">
+    <div class="col-12">
+      <div class="card shadow-lg border-0" style="border-radius: 15px;">
+        <div class="card-header text-white rounded-top fw-bold" style="border-radius: 15px 15px 0 0; background-color: #28A6A5;">
+          <h5 class="mb-0"><i class="bi bi-gift"></i> ガチャ結果</h5>
+        </div>
+        <div class="card-body">
+          <div id="result-list" class="result-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-5" id="probabilities-section" style="display: none;">
+    <div class="col-12">
+      <div class="card shadow-lg border-0" style="border-radius: 15px;">
+        <div class="card-header text-white rounded-top fw-bold" style="border-radius: 15px 15px 0 0; background-color: #28A6A5;">
+          <h5 class="mb-0"><i class="bi bi-percent"></i> ガチャ確率</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped table-hover">
+              <thead class="bg-light">
+                <tr>
+                  <th>カードID</th>
+                  <th>カード名</th>
+                  <th class="text-end">確率</th>
+                </tr>
+              </thead>
+              <tbody id="probabilities-body">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .result-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .gacha-card {
+    border-radius: 15px;
+    padding: 25px 15px;
+    text-align: center;
+    background-color: white;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+    border: 3px solid;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .gacha-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+    animation: shine 3s infinite;
+  }
+
+  @keyframes shine {
+    0% { transform: translate(0, 0); }
+    50% { transform: translate(50px, 50px); }
+    100% { transform: translate(0, 0); }
+  }
+
+  .gacha-card:hover {
+    transform: translateY(-10px) scale(1.05);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.25);
+  }
+
+  .gacha-card.common {
+    border-color: #999;
+    background: linear-gradient(135deg, #F9FCFD 0%, #E8F4F3 100%);
+  }
+
+  .gacha-card.common .card-name {
+    color: #082627;
+  }
+
+  .gacha-card.rare {
+    border-color: #28A6A5;
+    background: linear-gradient(135deg, #E8F4F3 0%, #D0E9E7 100%);
+  }
+
+  .gacha-card.rare .card-name {
+    color: #28A6A5;
+  }
+
+  .gacha-card.super_rare {
+    border-color: #28A6A5;
+    background: linear-gradient(135deg, #D0E9E7 0%, #B8DDD9 100%);
+  }
+
+  .gacha-card.super_rare .card-name {
+    color: #28A6A5;
+    font-size: 15px;
+  }
+
+  .gacha-card.ultra_rare {
+    border-color: #28A6A5;
+    background: linear-gradient(135deg, #B8DDD9 0%, #A0D1CC 100%);
+    animation: glow 2s infinite;
+  }
+
+  @keyframes glow {
+    0%, 100% { box-shadow: 0 8px 16px rgba(40,166,165,0.3); }
+    50% { box-shadow: 0 8px 24px rgba(40,166,165,0.6); }
+  }
+
+  .gacha-card.ultra_rare .card-name {
+    color: #082627;
+    font-size: 16px;
+    font-weight: 900;
+  }
+
+  .gacha-card .card-name {
+    font-weight: bold;
+    margin-bottom: 12px;
+    font-size: 14px;
+    z-index: 1;
+    position: relative;
+  }
+
+  .gacha-card .card-rarity {
+    font-size: 12px;
+    color: #666;
+    font-weight: 700;
+    z-index: 1;
+    position: relative;
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 20px;
+  }
+
+  .btn-group {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn-group .btn {
+    flex: 1;
+  }
+
+  .btn-group .btn:checked {
+    background-color: #00736D;
+    color: white;
+  }
+
+  .btn-check:checked + .btn {
+    background-color: #00736D !important;
+    color: white !important;
+    border-color: #00736D !important;
+  }
+
+  .badge {
+    font-size: 16px !important;
+    padding: 8px 12px !important;
+  }
+</style>
+
+<script>
+  let totalDraws = 0;
+  let rarityStats = {};
+  const cardCache = {};
+
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('draw-button').addEventListener('click', performDraw);
+    document.getElementById('view-probabilities').addEventListener('click', viewProbabilities);
+    document.getElementById('reset-results').addEventListener('click', resetResults);
+  });
+
+  function performDraw() {
+    const drawType = document.querySelector('input[name="draw-type"]:checked').value;
+    const endpoint = drawType === 'single' ? '/gachas/draw' : '/gachas/draw_multiple?count=10';
+    const count = drawType === 'single' ? 1 : 10;
+
+    fetch(endpoint)
+      .then(response => response.json())
+      .then(data => {
+        const cards = drawType === 'single' ? [data] : data.cards;
+        displayResults(cards);
+        updateStatistics(cards);
+      })
+      .catch(error => console.error('Error:', error));
+  }
+
+  function displayResults(cards) {
+    const resultList = document.getElementById('result-list');
+    resultList.innerHTML = '';
+
+    document.getElementById('results-section').style.display = 'block';
+    document.getElementById('probabilities-section').style.display = 'none';
+
+    cards.forEach(card => {
+      const cardEl = document.createElement('div');
+      cardEl.className = `gacha-card ${card.rarity}`;
+      cardEl.innerHTML = `
+        <div class="card-name">${card.name}</div>
+        <div class="card-rarity">${getRarityLabel(card.rarity)}</div>
+      `;
+      resultList.appendChild(cardEl);
+    });
+  }
+
+  function updateStatistics(cards) {
+    totalDraws += cards.length;
+
+    cards.forEach(card => {
+      if (!rarityStats[card.rarity]) {
+        rarityStats[card.rarity] = 0;
+      }
+      rarityStats[card.rarity]++;
+      cardCache[card.id] = card;
+    });
+
+    updateStatisticsDisplay();
+  }
+
+  function updateStatisticsDisplay() {
+    document.getElementById('total-draws').textContent = totalDraws;
+
+    const rarityStatsDiv = document.getElementById('rarity-stats');
+    rarityStatsDiv.innerHTML = '';
+
+    const rarityOrder = ['ultra_rare', 'super_rare', 'rare', 'common'];
+    const rarityLabels = {
+      'ultra_rare': '★4 (ウルトラレア)',
+      'super_rare': '★3 (スーパーレア)',
+      'rare': '★2 (レア)',
+      'common': '★1 (コモン)'
+    };
+
+    rarityOrder.forEach(rarity => {
+      if (rarityStats[rarity]) {
+        const count = rarityStats[rarity];
+        const percentage = ((count / totalDraws) * 100).toFixed(2);
+        const row = document.createElement('div');
+        row.className = 'row mb-2';
+        row.innerHTML = `
+          <div class="col-6">${rarityLabels[rarity]}</div>
+          <div class="col-6">${count} (${percentage}%)</div>
+        `;
+        rarityStatsDiv.appendChild(row);
+      }
+    });
+  }
+
+  function viewProbabilities() {
+    // 最初に全カードの情報を取得するために単発ガチャを実行
+    fetch('/gachas/draw')
+      .then(response => response.json())
+      .then(data => {
+        cardCache[data.id] = data;
+        // 次に確率データを取得
+        return fetch('/gachas/probabilities');
+      })
+      .then(response => response.json())
+      .then(data => {
+        displayProbabilities(data);
+      })
+      .catch(error => console.error('Error:', error));
+  }
+
+  function displayProbabilities(probabilities) {
+    const tbody = document.getElementById('probabilities-body');
+    tbody.innerHTML = '';
+
+    document.getElementById('results-section').style.display = 'none';
+    document.getElementById('probabilities-section').style.display = 'block';
+
+    for (const [id, probability] of Object.entries(probabilities)) {
+      const card = cardCache[id];
+      const cardName = card ? card.name : `カード #${id}`;
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${id}</td>
+        <td>${cardName}</td>
+        <td><strong>${probability.toFixed(2)}%</strong></td>
+      `;
+      tbody.appendChild(row);
+    }
+  }
+
+  function getRarityLabel(rarity) {
+    const labels = {
+      'common': 'コモン',
+      'rare': 'レア',
+      'super_rare': 'スーパーレア',
+      'ultra_rare': 'ウルトラレア'
+    };
+    return labels[rarity] || rarity;
+  }
+
+  function resetResults() {
+    if (confirm('統計情報をリセットしますか？')) {
+      totalDraws = 0;
+      rarityStats = {};
+      document.getElementById('total-draws').textContent = '0';
+      document.getElementById('total-pickup').textContent = '0';
+      document.getElementById('pickup-rate').textContent = '(0%)';
+      document.getElementById('rarity-stats').innerHTML = '<p class="text-muted">まだ抽選されていません</p>';
+      document.getElementById('results-section').style.display = 'none';
+      document.getElementById('probabilities-section').style.display = 'none';
+    }
+  }
+</script>

@@ -1,0 +1,2 @@
+module GachasHelper
+end
